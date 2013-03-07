@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use 5.12.0;
+
+my $authlog = '/var/log/auth.log';
+
+open my $AUTHLOG, '<', $authlog 
+    or die "Can't open the auth log file!: $!";
+
+while ( my $line = <$AUTHLOG> ) {
+    if ( $line =~ /subsystem request for sftp by user / ){
+        my ( $proc_id ) = $line =~ /\[(\d+)\]/;
+        print "$proc_id\n";
+    }
+}
