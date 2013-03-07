@@ -7,6 +7,9 @@ use 5.12.0;
 use Data::Dumper;
 
 my $authlog = '/var/log/auth.log.0';
+my $outfile = 'sftp-conn.log';
+
+my $user_to_check = $ARGV[0];
 
 open my $AUTHLOG, '<', $authlog 
     or die "Can't open the auth log file!: $!";
@@ -24,10 +27,9 @@ while ( my $line = <$AUTHLOG> ) {
     my ( $proc_id ) = $line =~ /\[(\d+)\]/;       
    
     if ( $line =~ /session opened for local user / ){
-        my ( $proc_time ) = $line =~ /(\d+:\d+:\d+)/;
-        my ( $proc_user )    = $line =~ /opened for local user (\w+) /;
-        $logdata{ $proc_id }{ time } = $proc_time;
-        $logdata{ $proc_id }{ user } = $proc_user;
+        next if $line !~ /$user_to_check/;
+        ( $logdata{ $proc_id }{ time } ) = $line =~ /(.+\d+:\d+:\d+)/;
+        ( $logdata{ $proc_id }{ user } ) = $line =~ /opened for local user (\w+) /;
         next;
     }
 
@@ -43,4 +45,23 @@ while ( my $line = <$AUTHLOG> ) {
     }
 }
 
-print Dumper \%logdata;
+close $authlog;
+
+open my $OUTFILE, '+>', $outfile
+    or die "Can't open the SFTP output log: $!";
+
+for my $conn_id ( sort keys %logdata ) {
+
+    print $OUTFILE 
+        "\nUser: $logdata{ $conn_id }{ user }\nConnection: $conn_id\nConnection time: $logdata{ $conn_id }{ time }\nActions:\n";
+
+    for my $action ( @{ $logdata{ $conn_id }{ actions } } ){
+
+        print $OUTFILE
+            
+            "   $action\n";
+    }
+}
+
+
+#print Dumper \%logdata;
