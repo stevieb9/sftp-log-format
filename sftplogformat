@@ -17,7 +17,10 @@ while ( my $line = <$AUTHLOG> ) {
     if ( $line =~ /subsystem request for sftp by user / ){
         my ( $proc_id )   = $line =~ /\[(\d+)\]/;       
         my ( $proc_time ) = $line =~ /(\d+:\d+:\d+)/;
-        my $proc_user = $line =~ s/.*\W(\w)/$1/;
+        $line =~ s/.*\W(\w)/$1/;
+        my $proc_user     = $line;
+        $logdata{ $proc_id }{ time } = $proc_time;
+        $logdata{ $proc_id }{ user } = $proc_user;
     }
 }
 
