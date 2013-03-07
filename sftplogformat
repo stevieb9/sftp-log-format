@@ -4,14 +4,21 @@ use warnings;
 use strict;
 use 5.12.0;
 
+use Data::Dumper;
+
 my $authlog = '/var/log/auth.log';
 
 open my $AUTHLOG, '<', $authlog 
     or die "Can't open the auth log file!: $!";
 
+my %logdata;
+
 while ( my $line = <$AUTHLOG> ) {
     if ( $line =~ /subsystem request for sftp by user / ){
-        my ( $proc_id ) = $line =~ /\[(\d+)\]/;
-        print "$proc_id\n";
+        my ( $proc_id )   = $line =~ /\[(\d+)\]/;       
+        my ( $proc_time ) = $line =~ /(\d+:\d+:\d+)/;
+        my $proc_user = $line =~ s/.*\W(\w)/$1/;
     }
 }
+
+print Dumper \%logdata;
