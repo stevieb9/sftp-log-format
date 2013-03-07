@@ -53,13 +53,12 @@ open my $OUTFILE, '+>', $outfile
 for my $conn_id ( sort keys %logdata ) {
 
     print $OUTFILE 
-        "\nUser: $logdata{ $conn_id }{ user }\nConnection: $conn_id\nConnection time: $logdata{ $conn_id }{ time }\nActions:\n";
+        "\nUser: $logdata{ $conn_id }{ user }\nConnection: $conn_id" . 
+        "\nConnection time: $logdata{ $conn_id }{ time }\nActions:\n";
 
     for my $action ( @{ $logdata{ $conn_id }{ actions } } ){
 
-        print $OUTFILE
-            
-            "   $action\n";
+        print $OUTFILE "   $action\n";
     }
 }
 
