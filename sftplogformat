@@ -6,7 +6,7 @@ use 5.12.0;
 
 use Data::Dumper;
 
-my $authlog = '/var/log/auth.log';
+my $authlog = '/var/log/auth.log.0';
 
 open my $AUTHLOG, '<', $authlog 
     or die "Can't open the auth log file!: $!";
@@ -14,13 +14,32 @@ open my $AUTHLOG, '<', $authlog
 my %logdata;
 
 while ( my $line = <$AUTHLOG> ) {
-    if ( $line =~ /subsystem request for sftp by user / ){
-        my ( $proc_id )   = $line =~ /\[(\d+)\]/;       
+    
+    chomp $line;
+
+    if ( $line =~ /Invalid|Failed|error|keyboard-interactive|getaddrinfo/ ){
+        next;
+    }
+
+    my ( $proc_id ) = $line =~ /\[(\d+)\]/;       
+   
+    if ( $line =~ /session opened for local user / ){
         my ( $proc_time ) = $line =~ /(\d+:\d+:\d+)/;
-        $line =~ s/.*\W(\w)/$1/;
-        my $proc_user     = $line;
+        my ( $proc_user )    = $line =~ /opened for local user (\w+) /;
         $logdata{ $proc_id }{ time } = $proc_time;
         $logdata{ $proc_id }{ user } = $proc_user;
+        next;
+    }
+
+    my @entry = split (/\s+/, $line );
+    my $time;
+    for ( 1..3 ){
+        $time .= " " . shift @entry;
+    }
+    
+    if ( exists $logdata{ $proc_id } ) {
+        my $stamped_entry = $time . " " . ( split( /: /, $line ) )[1];
+        push @{ $logdata{ $proc_id }{ actions } }, $stamped_entry;
     }
 }
 
